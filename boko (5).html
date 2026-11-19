@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161c">
+<title>Boko</title>
+<style>
+:root{--bg:#000;--card:#131313;--line:#262626;--text:#f5f5f5;--mute:#8e8e8e;--acc:#b9aaff;--err:#ff8a8a;color-scheme:dark}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+input,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:6px 0}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.btn{background:var(--acc);color:#16131f;border:0;border-radius:10px;padding:12px 18px;font-weight:600;width:100%;margin-top:8px}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.err{color:var(--err);min-height:1.4em;font-size:14px}
+.mute{color:var(--mute);font-size:14px}
+#auth{height:100%;display:flex;flex-direction:column;justify-content:center;padding:28px;max-width:420px;margin:auto}
+#auth h1{font-size:44px;letter-spacing:-1px;margin-bottom:4px}
+#app{display:none;height:100%;flex-direction:column}
+#view{flex:1;overflow-y:auto;min-height:0}
+nav{display:flex;border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;padding:14px 0;color:var(--mute)}
+nav button.on{color:var(--acc);font-weight:600}
+.feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory}
+.vid{height:100%;scroll-snap-align:start;position:relative;background:#000;display:flex;align-items:center}
+.vid video{width:100%;max-height:100%;object-fit:contain}
+.meta{position:absolute;left:0;right:0;bottom:0;padding:48px 16px 16px;background:linear-gradient(transparent,rgba(0,0,0,.75));pointer-events:none}
+.like{position:absolute;right:14px;bottom:84px;background:rgba(20,22,28,.7);border:1px solid var(--line);border-radius:999px;padding:10px 14px}
+.like.on{color:var(--acc);border-color:var(--acc)}
+.pad{padding:20px;padding-top:calc(20px + env(safe-area-inset-top))}
+.row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px}
+.b{max-width:78%;padding:9px 13px;border-radius:16px;background:var(--card);align-self:flex-start;overflow-wrap:anywhere}
+.b.me{background:var(--acc);color:#16131f;align-self:flex-end}
+.send{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.send input{margin:0}.send .btn{width:auto;margin:0}
+.empty{padding:60px 24px;text-align:center;color:var(--mute)}
+.code{font-size:26px;letter-spacing:3px;color:var(--acc);margin:10px 0}
+#app{max-width:480px;margin:0 auto;position:relative;border-inline:1px solid var(--line)}
+svg.i{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;margin:auto}
+nav{align-items:center;background:#000}
+nav button{padding:12px 0}
+nav button.plus{flex:0 0 64px;background:var(--acc);color:#000;border-radius:12px;padding:7px 0;margin:6px 10px}
+nav button.plus svg{stroke-width:2.4}
+.mb{position:absolute;z-index:5;top:calc(12px + env(safe-area-inset-top));right:12px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.6);color:var(--text);padding:0}
+.like svg{width:22px;height:22px;display:inline-block;vertical-align:-5px;margin-right:6px}
+.like.on svg{fill:currentColor}
+.pick{display:flex;align-items:center;justify-content:center;height:160px;border:1px dashed var(--line);border-radius:14px;color:var(--mute);margin:10px 0;cursor:pointer}
+.bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;width:0;background:var(--acc)}
+.gp{border-top:1px solid var(--line);padding:8px;max-height:45vh;display:flex;flex-direction:column}
+.gp[hidden]{display:none}
+.gp input{margin:0 0 6px}
+.gg{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow-y:auto}
+.gg img{width:100%;border-radius:8px;display:block;cursor:pointer}
+.gifmsg{display:block;max-width:100%;border-radius:10px;margin:2px 0}
+.gb{padding:10px 12px!important}
+.cmb{position:absolute;right:14px;bottom:136px;background:rgba(20,22,28,.7);border:1px solid var(--line);border-radius:999px;padding:10px 14px}
+.cmb svg{width:22px;height:22px;display:inline-block;vertical-align:-5px;margin-right:6px}
+.sheet{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
+.sheet[hidden]{display:none}
+.sh{width:100%;height:74%;background:#0b0b0b;border-top:1px solid var(--line);border-radius:18px 18px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.shh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.cl{flex:1;overflow-y:auto;padding:0 16px;min-height:0}
+.cmt{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.cx{background:none;border:0;color:var(--mute);float:right;padding:0 0 0 12px}
+.snd{right:auto;left:12px}
+.upd{position:fixed;z-index:200;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));background:var(--acc);color:#000;border-radius:12px;padding:12px 14px;font-weight:600;text-align:center;cursor:pointer}
+.upd[hidden]{display:none}
+.av{border-radius:50%;object-fit:cover;display:inline-block;flex:none;vertical-align:middle}
+.av.ph{background:var(--card);border:1px solid var(--line);color:var(--acc);display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.ulink{cursor:pointer}
+.vw{position:relative;width:100%;max-width:480px;height:100%;display:flex;align-items:center}
+.vid{justify-content:center}
+.meta .who{display:inline-flex;align-items:center;gap:8px;pointer-events:auto;margin-bottom:4px}
+.rw{display:flex;align-items:center;gap:10px}
+.cmt .ulink{display:inline-flex;align-items:center;gap:8px;margin-bottom:4px}
+.ph-head{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.avwrap{position:relative;display:block}.avwrap.own{cursor:pointer}
+.avedit{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:11px;background:rgba(0,0,0,.8);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:4px}
+.tile{position:relative;aspect-ratio:9/16;background:var(--card);overflow:hidden;cursor:pointer;border-radius:6px}
+.tile video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.tdel{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:13px}
+.tdel.sure{background:#b3261e;border-color:#b3261e}
+.pl{width:100%;height:100%;background:#000;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:16px;padding-top:calc(16px + env(safe-area-inset-top))}
+#plv{width:100%;max-height:78%;background:#000}
+@media (min-width:800px){
+  #app{max-width:1100px;flex-direction:row}
+  nav{order:-1;flex-direction:column;justify-content:center;width:92px;border-top:0;border-right:1px solid var(--line);padding:0}
+  nav button{width:100%}
+  nav button.plus{flex:0 0 auto;width:60px;margin:10px auto}
+  #view{flex:1;min-width:0}
+  .pad{max-width:640px;margin:0 auto}
+  .snd{left:108px}
+}
+.rot{display:none}
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){.rot{position:fixed;inset:0;z-index:99;background:#000;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--mute)}}
+</style>
+</head>
+<body>
+<div class="upd" id="upd" hidden></div>
+<div id="auth">
+  <h1>Boko</h1>
+  <p class="mute" id="tag">Short videos, invite only.</p>
+  <div id="signupOnly" hidden>
+    <input id="username" placeholder="Username" autocomplete="nickname" autocapitalize="none">
+    <input id="invite" placeholder="Invite code" autocapitalize="characters">
+  </div>
+  <input id="email" type="email" placeholder="Email" autocomplete="email">
+  <input id="pass" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+  <p class="err" id="aerr"></p>
+  <button class="btn" id="go">Log in</button>
+  <button class="btn ghost" id="swap">I have an invite</button>
+</div>
+
+<div id="app">
+  <button class="mb" id="mbtn" aria-label="Messages"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg></button>
+  <button class="mb snd" id="sbtn" aria-label="Sound"></button>
+  <div id="view"></div>
+  <div class="sheet" id="player" hidden><div class="pl"><button class="btn ghost" id="plx" style="width:auto;margin:0;align-self:flex-start;padding:6px 14px">Close</button><video id="plv" controls playsinline></video><p id="plc" class="mute"></p></div></div>
+  <div class="sheet" id="sheet" hidden>
+    <div class="sh">
+      <div class="shh"><b>Comments</b><button class="btn ghost" id="shx" style="width:auto;margin:0;padding:4px 12px">Close</button></div>
+      <div class="cl" id="cl"></div>
+      <div class="gp" id="cgp" hidden><input id="cgq" placeholder="Search GIPHY"><div class="gg" id="cgg"></div><div class="mute" style="text-align:center;font-size:12px;margin-top:6px">Powered by GIPHY</div></div>
+      <form class="send" id="cf"><button type="button" class="btn ghost gb" id="cgb">GIF</button><input id="ci" placeholder="Add a comment" maxlength="500" autocomplete="off"><button class="btn">Post</button></form>
+    </div>
+  </div>
+  <nav>
+    <button data-t="feed" aria-label="Home"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+    <button class="plus" data-t="upload" aria-label="Post a video"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button data-t="me" aria-label="Profile"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></button>
+  </nav>
+</div>
+<div class="rot">Turn your phone upright to use Boko.</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+var APP_VERSION=2;
+(function(){try{
+  var o=JSON.parse(localStorage.getItem('boko_ota')||'null');
+  if(!o||!(o.v>APP_VERSION)||!o.html)return;
+  var n=+localStorage.getItem('boko_tries')||0;
+  if(n>=2&&localStorage.getItem('boko_good')!==String(o.v)){localStorage.removeItem('boko_ota');return;}
+  localStorage.setItem('boko_tries',String(n+1));
+  window.__replacing=true;
+  setTimeout(function(){window.__replacing=false;document.open();document.write(o.html);document.close();},0);
+}catch(e){}})();
+</script>
+<script>
+(function(){if(window.__replacing)return;
+const SB_URL='https://uvjmuebncmeunthasxng.supabase.co';
+const SB_KEY='sb_publishable_5WuRmbQqbwHCh2yBJ7V-6A_cCOZ5E1p';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let me=null,signup=false,poll=null,obs=null;
+
+/* ---------- auth ---------- */
+function mode(s){signup=s;$('#signupOnly').hidden=!s;$('#go').textContent=s?'Create account':'Log in';
+  $('#swap').textContent=s?'I already have an account':'I have an invite';$('#aerr').textContent='';}
+$('#swap').onclick=()=>mode(!signup);
+$('#go').onclick=async()=>{
+  const email=$('#email').value.trim(),password=$('#pass').value;$('#aerr').textContent='';
+  let r;
+  if(signup){
+    const u=$('#username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
+    if(u.length<3)return $('#aerr').textContent='Username needs at least 3 letters, numbers or _.';
+    r=await sb.auth.signUp({email,password,options:{data:{username:u,invite:$('#invite').value}}});
+    if(!r.error&&!r.data.session){$('#aerr').textContent='Check your email to confirm, then log in.';mode(false);return;}
+  }else r=await sb.auth.signInWithPassword({email,password});
+  if(r.error)$('#aerr').textContent=r.error.message.includes('Database error')?'That invite code is invalid or already used.':r.error.message;
+};
+try{if(Math.min(screen.width,screen.height)<600&&screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(()=>{});}catch(e){}
+try{const o=JSON.parse(localStorage.getItem('boko_ota')||'null');if(o&&o.v<APP_VERSION)localStorage.removeItem('boko_ota');}catch(e){}
+/* ---------- over-the-air updates ---------- */
+let lastCheck=0;
+async function checkUpdate(){
+  if(Date.now()-lastCheck<300000)return;lastCheck=Date.now();
+  try{
+    const stored=JSON.parse(localStorage.getItem('boko_ota')||'null');
+    const cur=Math.max(APP_VERSION,stored?stored.v:0);
+    const {data}=await sb.from('app_versions').select('version,notes').gt('version',cur).order('version',{ascending:false}).limit(1);
+    if(!data||!data.length)return;
+    const nv=data[0];
+    const r=await sb.from('app_versions').select('html').eq('version',nv.version).single();
+    const html=r.data&&r.data.html;
+    if(!html||!html.includes('<title>Boko</title>')||!html.includes('APP_VERSION='+nv.version))return;
+    localStorage.setItem('boko_ota',JSON.stringify({v:nv.version,html,notes:nv.notes}));
+    localStorage.setItem('boko_tries','0');
+    const b=$('#upd');b.textContent='Update ready'+(nv.notes?': '+nv.notes:'')+'. Tap to restart.';b.hidden=false;b.onclick=()=>location.reload();
+  }catch(e){}
+}
+setTimeout(checkUpdate,1500);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate();});
+sb.auth.onAuthStateChange((_e,s)=>{
+  try{localStorage.setItem('boko_good',String(APP_VERSION));localStorage.setItem('boko_tries','0');}catch(e){}
+  me=s?.user||null;
+  $('#auth').style.display=me?'none':'flex';$('#app').style.display=me?'flex':'none';
+  if(me)go('feed');
+});
+
+/* ---------- nav ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.t));
+$('#mbtn').onclick=()=>go('msgs');
+const avUrl=p=>`${SB_URL}/storage/v1/object/public/avatars/${p}`;
+const av=(path,name,sz=36)=>path?`<img class="av" style="width:${sz}px;height:${sz}px" src="${esc(avUrl(path))}" alt="">`:`<span class="av ph" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.45)}px">${esc(((name||'?')[0]||'?').toUpperCase())}</span>`;
+let curTab='feed',backTo='feed';
+let SOUND=false;
+const SPK_ON='<svg class="i" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const SPK_OFF='<svg class="i" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+function setSound(on){SOUND=on;document.querySelectorAll('.vid video').forEach(v=>{v.muted=!on;});$('#sbtn').innerHTML=on?SPK_ON:SPK_OFF;}
+$('#sbtn').onclick=()=>setSound(!SOUND);
+$('#sbtn').innerHTML=SPK_OFF;
+const CHAT='<svg class="i" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>';
+const HEART='<svg class="i" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>';
+function go(t,arg){
+  clearInterval(poll);$('#sheet').hidden=true;$('#player').hidden=true;$('#plv').pause();
+  if(t==='user')backTo=curTab==='chat'?'msgs':(curTab==='user'?backTo:curTab);curTab=t;
+  $('#mbtn').hidden=!(t==='feed'||t==='me'||t==='msgs');$('#sbtn').hidden=t!=='feed';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===(t==='user'?'':t)));
+  ({feed,upload,msgs,me:profile,user:profile,chat})[t](arg);
+}
+const view=h=>{$('#view').innerHTML=h;};
+
+/* ---------- feed ---------- */
+async function feed(){
+  view('<div class="empty">Loading…</div>');
+  const {data,error}=await sb.from('videos').select('*,profiles!user_id(username,avatar_path),likes(user_id),comments(count)').order('created_at',{ascending:false}).limit(30);
+  if(error)return view(`<div class="empty">${esc(error.message)}</div>`);
+  if(!data.length)return view('<div class="empty">No videos yet. Post the first one.</div>');
+  const {data:urls}=await sb.storage.from('videos').createSignedUrls(data.map(v=>v.path),3600);
+  view('<div class="feed">'+data.map((v,i)=>{
+    const liked=v.likes.some(l=>l.user_id===me.id);const cc=v.comments?.[0]?.count||0;
+    return `<section class="vid"><div class="vw"><video src="${esc(urls?.[i]?.signedUrl)}" loop muted playsinline preload="metadata"></video>
+      <button class="like ${liked?'on':''}" data-id="${v.id}" data-n="${v.likes.length}">${HEART}${v.likes.length}</button>
+      <button class="cmb" data-id="${v.id}" data-o="${v.user_id}" data-n="${cc}">${CHAT}${cc}</button>
+      <div class="meta"><div class="who ulink" data-uid="${v.user_id}">${av(v.profiles?.avatar_path,v.profiles?.username,34)}<b>@${esc(v.profiles?.username)}</b></div><br>${esc(v.caption)}</div></div></section>`;}).join('')+'</div>');
+  obs?.disconnect();
+  obs=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target.querySelector('video');if(e.isIntersecting){v.muted=!SOUND;v.play().catch(()=>{if(SOUND){setSound(false);v.play().catch(()=>{});}});}else v.pause();}),{threshold:.7});
+  document.querySelectorAll('.vid').forEach(s=>{obs.observe(s);s.querySelector('video').onclick=()=>setSound(!SOUND);});
+  document.querySelectorAll('.cmb').forEach(b=>b.onclick=()=>openComments(b));
+  document.querySelectorAll('.like').forEach(b=>b.onclick=async()=>{
+    const on=b.classList.contains('on');let n=+b.dataset.n;
+    const r=on?await sb.from('likes').delete().match({video_id:b.dataset.id,user_id:me.id}):await sb.from('likes').insert({video_id:b.dataset.id,user_id:me.id});
+    if(r.error)return;n+=on?-1:1;b.dataset.n=n;b.classList.toggle('on',!on);b.innerHTML=HEART+n;});
+}
+
+/* ---------- upload ---------- */
+function upload(){
+  view(`<div class="pad"><h2>New video</h2>
+  <label class="pick" id="pick"><input id="file" type="file" accept="video/*" hidden><span id="pt">Tap to choose a video</span></label>
+  <video id="pv" playsinline muted controls hidden style="width:100%;max-height:45vh;border-radius:12px;background:#000"></video>
+  <textarea id="cap" rows="2" placeholder="Write a caption…" maxlength="200"></textarea>
+  <div class="bar" id="bar" hidden><i id="fill"></i></div>
+  <p class="err" id="uerr"></p><button class="btn" id="up">Post</button><p class="mute">Videos up to 50 MB.</p></div>`);
+  $('#file').onchange=()=>{const f=$('#file').files[0];if(!f)return;
+    $('#pv').src=URL.createObjectURL(f);$('#pv').hidden=false;$('#pick').style.display='none';};
+  $('#up').onclick=async()=>{
+    const f=$('#file').files[0];$('#uerr').textContent='';
+    if(!f)return $('#uerr').textContent='Choose a video first.';
+    if(f.size>52428800)return $('#uerr').textContent='That video is over 50 MB.';
+    $('#up').disabled=true;$('#up').textContent='Posting…';$('#bar').hidden=false;
+    const fail=m=>{$('#uerr').textContent=m;$('#up').disabled=false;$('#up').textContent='Post';$('#bar').hidden=true;};
+    const {data:{session}}=await sb.auth.getSession();
+    const path=`${me.id}/${Date.now()}.${(f.name.split('.').pop()||'mp4').toLowerCase()}`;
+    const x=new XMLHttpRequest();
+    x.open('POST',`${SB_URL}/storage/v1/object/videos/${path}`);
+    x.setRequestHeader('Authorization','Bearer '+session.access_token);
+    x.setRequestHeader('apikey',SB_KEY);
+    x.setRequestHeader('Content-Type',f.type||'video/mp4');
+    x.upload.onprogress=e=>{if(e.lengthComputable)$('#fill').style.width=(e.loaded/e.total*100)+'%';};
+    x.onerror=()=>fail('Upload failed. Check your connection.');
+    x.onload=async()=>{
+      if(x.status<200||x.status>=300)return fail('Upload failed ('+x.status+').');
+      const r=await sb.from('videos').insert({user_id:me.id,path,caption:$('#cap').value.trim()});
+      r.error?fail(r.error.message):go('feed');};
+    x.send(f);
+  };
+}
+
+/* ---------- messages ---------- */
+const GIPHY_KEY='BnlhuEXc5BLHNlZOFCH5LbT3L1FOXAXn'; // free key: developers.giphy.com
+const okGif=u=>/^https:\/\/media\d*\.giphy\.com\//.test(u||'');
+async function loadGifs(q,g){
+  const note=m=>{g.innerHTML=`<p class="mute" style="padding:10px;grid-column:1/-1">${m}</p>`;};
+  if(GIPHY_KEY.startsWith('PASTE'))return note('Add your GIPHY key in the app file to turn on GIFs.');
+  try{
+    const r=await fetch(`https://api.giphy.com/v1/gifs/${q?'search':'trending'}?api_key=${GIPHY_KEY}&limit=24&rating=pg-13${q?'&q='+encodeURIComponent(q):''}`);
+    const j=await r.json();
+    g.innerHTML=(j.data||[]).map(x=>`<img src="${esc(x.images.fixed_width.url)}" data-u="${esc(x.images.fixed_width.url)}">`).join('')||'';
+    if(!g.children.length)note('No GIFs found.');
+  }catch(e){note('Could not load GIFs.');}
+}
+function wireGif(btn,panel,inp,grid,onPick){
+  let t;
+  btn.onclick=()=>{panel.hidden=!panel.hidden;if(!panel.hidden&&!grid.children.length)loadGifs('',grid);};
+  inp.oninput=()=>{clearTimeout(t);t=setTimeout(()=>loadGifs(inp.value.trim(),grid),350);};
+  grid.onclick=e=>{const u=e.target.dataset&&e.target.dataset.u;if(u&&okGif(u)){panel.hidden=true;onPick(u);}};
+}
+async function msgs(){
+  view('<div class="empty">Loading…</div>');
+  const {data}=await sb.from('profiles').select('id,username,avatar_path').neq('id',me.id).order('username');
+  const row=(id,u,label,ap)=>`<div class="row" data-id="${id}" data-u="${esc(u)}"><span class="rw">${ap!==undefined?av(ap,u,34):''}${label}</span><span class="mute">Open</span></div>`;
+  view('<div class="pad"><h2>Messages</h2>'+row(me.id,'Notes to self','Notes to self')+(data||[]).map(p=>row(p.id,p.username,'@'+esc(p.username),p.avatar_path||null)).join('')+(data?.length?'':'<p class="mute">No one else is here yet.</p>')+'</div>');
+  document.querySelectorAll('.row').forEach(r=>r.onclick=()=>go('chat',{id:r.dataset.id,u:r.dataset.u}));
+}
+function chat({id,u}){
+  const self=id===me.id;let last='';
+  view(`<div class="chat"><div class="pad" style="padding-bottom:10px"><button class="btn ghost" id="back" style="width:auto;margin:0;padding:6px 12px">Back</button> <b>${self?'Notes to self':'@'+esc(u)}</b></div>
+  <div class="msgs" id="ms"></div>
+  <div class="gp" id="gp" hidden><input id="gq" placeholder="Search GIPHY"><div class="gg" id="gg"></div><div class="mute" style="text-align:center;font-size:12px;margin-top:6px">Powered by GIPHY</div></div>
+  <form class="send" id="sf"><button type="button" class="btn ghost gb" id="gb">GIF</button><input id="mi" placeholder="Message" autocomplete="off"><button class="btn">Send</button></form></div>`);
+  $('#back').onclick=()=>go('msgs');
+  const load=async()=>{
+    const {data}=await sb.from('messages').select('*').or(`and(sender.eq.${me.id},receiver.eq.${id}),and(sender.eq.${id},receiver.eq.${me.id})`).order('created_at').limit(200);
+    const box=$('#ms');if(!box)return;
+    const sig=(data||[]).map(m=>m.id).join(',');if(sig===last)return;last=sig;
+    const end=box.scrollTop+box.clientHeight>=box.scrollHeight-40;
+    box.innerHTML=(data||[]).map(m=>`<div class="b ${m.sender===me.id?'me':''}">${okGif(m.gif_url)?`<img class="gifmsg" src="${esc(m.gif_url)}" loading="lazy">`:''}${m.body?esc(m.body):''}</div>`).join('')||`<p class="mute">${self?'Jot something down.':'Say hi.'}</p>`;
+    if(end)box.scrollTop=box.scrollHeight;};
+  const send=async(body,gif)=>{await sb.from('messages').insert({sender:me.id,receiver:id,body,gif_url:gif||null});await load();$('#ms').scrollTop=1e9;};
+  $('#sf').onsubmit=e=>{e.preventDefault();const b=$('#mi').value.trim();if(!b)return;$('#mi').value='';send(b);};
+  wireGif($('#gb'),$('#gp'),$('#gq'),$('#gg'),g=>send('',g));
+  load().then(()=>{$('#ms').scrollTop=1e9;});poll=setInterval(load,4000);
+}
+
+/* ---------- comments ---------- */
+let cv=null,cOwner=null,cBtn=null;
+async function openComments(btn){
+  cBtn=btn;cv=btn.dataset.id;cOwner=btn.dataset.o;
+  $('#sheet').hidden=false;$('#cgp').hidden=true;$('#cl').innerHTML='<p class="mute">Loading…</p>';
+  await renderComments();
+}
+async function renderComments(){
+  const {data,error}=await sb.from('comments').select('*,profiles!user_id(username,avatar_path)').eq('video_id',cv).order('created_at').limit(200);
+  const box=$('#cl');
+  if(error){box.innerHTML=`<p class="err">${esc(error.message)}</p>`;return;}
+  box.innerHTML=(data||[]).map(c=>`<div class="cmt">${(c.user_id===me.id||cOwner===me.id)?`<button class="cx" data-del="${c.id}" aria-label="Delete comment">✕</button>`:''}<span class="ulink" data-uid="${c.user_id}">${av(c.profiles?.avatar_path,c.profiles?.username,28)}<b>@${esc(c.profiles?.username)}</b></span><br>${okGif(c.gif_url)?`<img class="gifmsg" src="${esc(c.gif_url)}" loading="lazy">`:''}${c.body?esc(c.body):''}</div>`).join('')||'<p class="mute" style="padding:12px 0">No comments yet. Be the first.</p>';
+  setCount((data||[]).length);
+}
+function setCount(n){if(cBtn){cBtn.dataset.n=n;cBtn.innerHTML=CHAT+n;}}
+async function addComment(body,gif){
+  const r=await sb.from('comments').insert({video_id:cv,user_id:me.id,body,gif_url:gif||null});
+  if(r.error){$('#cl').insertAdjacentHTML('beforeend',`<p class="err">${esc(r.error.message)}</p>`);return;}
+  await renderComments();$('#cl').scrollTop=1e9;
+}
+$('#shx').onclick=()=>{$('#sheet').hidden=true;};
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')$('#sheet').hidden=true;};
+$('#cf').onsubmit=e=>{e.preventDefault();const b=$('#ci').value.trim();if(!b)return;$('#ci').value='';addComment(b);};
+$('#cl').onclick=async e=>{const id=e.target.dataset&&e.target.dataset.del;if(!id)return;await sb.from('comments').delete().eq('id',id);renderComments();};
+wireGif($('#cgb'),$('#cgp'),$('#cgq'),$('#cgg'),g=>addComment('',g));
+
+/* ---------- profiles ---------- */
+document.addEventListener('click',e=>{const l=e.target.closest&&e.target.closest('.ulink');if(l&&l.dataset.uid)go('user',{id:l.dataset.uid});});
+function openPlayer(url,cap){const v=$('#plv');v.src=url;$('#plc').textContent=cap||'';$('#player').hidden=false;v.play().catch(()=>{});}
+$('#plx').onclick=()=>{const v=$('#plv');v.pause();v.removeAttribute('src');v.load();$('#player').hidden=true;};
+async function setAvatar(file){
+  const err=m=>{const e=$('#perr');if(e)e.textContent=m;};
+  try{
+    const bmp=await createImageBitmap(file),n=Math.min(bmp.width,bmp.height),c=document.createElement('canvas');
+    c.width=c.height=256;c.getContext('2d').drawImage(bmp,(bmp.width-n)/2,(bmp.height-n)/2,n,n,0,0,256,256);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));
+    const path=`${me.id}/${Date.now()}.jpg`;
+    const up=await sb.storage.from('avatars').upload(path,blob,{contentType:'image/jpeg'});
+    if(up.error)return err(up.error.message);
+    const old=(await sb.from('profiles').select('avatar_path').eq('id',me.id).single()).data?.avatar_path;
+    const r=await sb.from('profiles').update({avatar_path:path}).eq('id',me.id);
+    if(r.error)return err(r.error.message);
+    if(old)sb.storage.from('avatars').remove([old]);
+    profile();
+  }catch(e){err('Could not use that picture. Try a JPG or PNG.');}
+}
+async function profile(arg){
+  const id=(arg&&arg.id)||me.id,own=id===me.id;
+  view('<div class="empty">Loading…</div>');
+  const [pr,vr]=await Promise.all([sb.from('profiles').select('*').eq('id',id).single(),sb.from('videos').select('id,path,caption').eq('user_id',id).order('created_at',{ascending:false})]);
+  const p=pr.data||{},vids=vr.data||[];
+  const su=vids.length?((await sb.storage.from('videos').createSignedUrls(vids.map(v=>v.path),3600)).data||[]):[];
+  const tiles=vids.map((v,i)=>`<div class="tile" data-i="${i}"><video src="${esc(su[i]?.signedUrl)}#t=0.1" preload="metadata" muted playsinline></video>${own?`<button class="tdel" data-id="${v.id}" data-path="${esc(v.path)}" aria-label="Delete video">✕</button>`:''}</div>`).join('');
+  view(`<div class="pad">${own?'':'<button class="btn ghost" id="pback" style="width:auto;margin:0 0 12px;padding:6px 12px">Back</button>'}
+  <div class="ph-head"><label class="avwrap ${own?'own':''}">${av(p.avatar_path,p.username,92)}${own?'<input id="pfp" type="file" accept="image/*" hidden><span class="avedit">Change</span>':''}</label>
+  <div><h2>@${esc(p.username)}</h2><p class="mute">${vids.length} video${vids.length===1?'':'s'}</p></div></div>
+  ${own?`<textarea id="bio" rows="3" maxlength="160" placeholder="Bio">${esc(p.bio)}</textarea><button class="btn" id="sv">Save bio</button>`:`${p.bio?`<p>${esc(p.bio)}</p>`:''}<button class="btn" id="dm">Message</button>`}
+  <p class="err" id="perr"></p>
+  <h3 style="margin:18px 0 8px">${own?'Your videos':'Videos'}</h3>
+  <div class="grid" id="grid">${tiles||'<p class="mute" style="grid-column:1/-1">No videos yet.</p>'}</div>
+  ${own&&p.can_invite?`<hr style="border:0;border-top:1px solid var(--line);margin:22px 0"><b>Invite someone</b><p class="mute">Each code works once.</p><div class="code" id="code"></div><button class="btn ghost" id="inv">Create invite code</button>`:''}
+  ${own?'<button class="btn ghost" id="out" style="margin-top:22px">Log out</button>':''}</div>`);
+  $('#grid').onclick=async e=>{
+    const d=e.target.closest('.tdel');
+    if(d){
+      if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='Delete?';d.classList.add('sure');setTimeout(()=>{d.dataset.sure='';d.textContent='✕';d.classList.remove('sure');},3000);return;}
+      const r=await sb.from('videos').delete().eq('id',d.dataset.id);
+      if(r.error){$('#perr').textContent=r.error.message;return;}
+      await sb.storage.from('videos').remove([d.dataset.path]);
+      profile();return;
+    }
+    const t=e.target.closest('.tile');if(t){const i=+t.dataset.i;openPlayer(su[i]?.signedUrl,vids[i].caption);}
+  };
+  if(own){
+    $('#pfp').onchange=e=>{const f=e.target.files[0];if(f)setAvatar(f);};
+    $('#sv').onclick=async()=>{const r=await sb.from('profiles').update({bio:$('#bio').value.trim()}).eq('id',me.id);$('#perr').textContent=r.error?r.error.message:'Saved.';};
+    if($('#inv'))$('#inv').onclick=async()=>{const r=await sb.rpc('create_invite');$('#code').textContent=r.data||'';$('#perr').textContent=r.error?r.error.message:'';};
+    $('#out').onclick=()=>sb.auth.signOut();
+  }else{
+    $('#pback').onclick=()=>go(backTo);
+    $('#dm').onclick=()=>go('chat',{id,u:p.username});
+  }
+}
+})();
+</script>
+</body>
+</html>
